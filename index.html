@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Johnny Vapes Reviews</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #f5f6f8;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #202124;
+}
+
+#stage {
+    width: 100vw;
+    height: 100vh;
+    padding: 4vw 5vw;
+    position: relative;
+}
+
+/* Header */
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5vw;
+}
+
+.brand {
+    font-size: 3.8vw;
+    font-weight: 700;
+}
+
+.location {
+    font-size: 1.6vw;
+    color: #6b7078;
+    margin-top: .3vw;
+}
+
+.google {
+    font-size: 1.8vw;
+    font-weight: 700;
+    color: #5f6368;
+}
+
+/* Main heading */
+
+.heading {
+    text-align: center;
+    font-size: 2.8vw;
+    font-weight: 700;
+    margin: 1vw 0 1.8vw;
+}
+
+/* Review card */
+
+.review {
+    background: white;
+    border-radius: 22px;
+    padding: 3vw 4vw;
+    box-shadow: 0 4px 18px rgba(0,0,0,.10);
+    width: 100%;
+    min-height: 50vh;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* Stars */
+
+.review-stars {
+    font-size: 3.5vw;
+    letter-spacing: .08em;
+    margin-bottom: 1.2vw;
+    color: #fbbc04;
+}
+
+/* Author */
+
+.author {
+    font-size: 2.2vw;
+    font-weight: 700;
+}
+
+.date {
+    font-size: 1.25vw;
+    color: #777;
+    margin-top: .35vw;
+}
+
+/* Review text */
+
+.text {
+    font-size: 2.8vw;
+    line-height: 1.4;
+    margin-top: 2vw;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
+
+/* Footer */
+
+.footer {
+    position: absolute;
+    bottom: 1.2vw;
+    left: 5vw;
+    right: 5vw;
+
+    display: flex;
+    justify-content: space-between;
+
+    font-size: 1.1vw;
+    color: #888;
+}
+</style>
+</head>
+
+<body>
+
+<div id="stage">
+
+    <div class="header">
+
+        <div>
+            <div class="brand">Johnny Vapes</div>
+
+            <div class="location">
+                Bellevue, WI
+            </div>
+        </div>
+
+        <div class="google">
+            Google Reviews
+        </div>
+
+    </div>
+
+
+    <div class="heading">
+        What Our Customers Are Saying
+    </div>
+
+
+    <div class="review">
+
+        <div class="review-stars" id="stars"></div>
+
+        <div class="author" id="author"></div>
+
+        <div class="date" id="date"></div>
+
+        <div class="text" id="text"></div>
+
+    </div>
+
+
+    <div class="footer">
+
+        <div>
+            Customer reviews • Johnny Vapes Bellevue
+        </div>
+
+        <div id="count"></div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+let reviews = [];
+let current = 0;
+
+
+/* Get written review text */
+
+function getReviewText(review) {
+
+    if (!review.description) {
+        return "";
+    }
+
+    if (typeof review.description === "string") {
+        return review.description.trim();
+    }
+
+    if (
+        review.description.en &&
+        typeof review.description.en === "string"
+    ) {
+        return review.description.en.trim();
+    }
+
+    return "";
+}
+
+
+/* Format the actual Google review date */
+
+function formatDate(dateString) {
+
+    if (!dateString) {
+        return "";
+    }
+
+    const date = new Date(dateString);
+
+    return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+    });
+}
+
+
+/* Display current review */
+
+function displayReview() {
+
+    if (!reviews.length) {
+        return;
+    }
+
+    const review = reviews[current];
+
+    const text = getReviewText(review);
+
+    const textElement = document.getElementById("text");
+
+
+    /* Basic review information */
+
+    document.getElementById("author").textContent =
+        review.author || "Google customer";
+
+    document.getElementById("date").textContent =
+        formatDate(review.review_date);
+
+    document.getElementById("stars").textContent =
+        "★".repeat(Math.round(review.rating));
+
+    textElement.textContent = text;
+
+
+    /*
+     * Dynamically resize the review text.
+     *
+     * Short reviews stay large.
+     * Longer reviews become progressively smaller.
+     */
+
+    let fontSize;
+
+    if (text.length <= 200) {
+        fontSize = 2.8;
+    }
+    else if (text.length <= 400) {
+        fontSize = 2.5;
+    }
+    else if (text.length <= 700) {
+        fontSize = 2.2;
+    }
+    else if (text.length <= 1000) {
+        fontSize = 1.9;
+    }
+    else if (text.length <= 1500) {
+        fontSize = 1.6;
+    }
+    else if (text.length <= 2000) {
+        fontSize = 1.4;
+    }
+    else {
+        fontSize = 1.2;
+    }
+
+    textElement.style.fontSize = fontSize + "vw";
+
+
+    /*
+     * Longer reviews stay visible longer.
+     */
+
+    let displayTime;
+
+    if (text.length <= 200) {
+        displayTime = 8000;
+    }
+    else if (text.length <= 500) {
+        displayTime = 12000;
+    }
+    else if (text.length <= 1000) {
+        displayTime = 18000;
+    }
+    else if (text.length <= 1500) {
+        displayTime = 22000;
+    }
+    else {
+        displayTime = 28000;
+    }
+
+
+    /*
+     * Move to the next review.
+     */
+
+    current++;
+
+    if (current >= reviews.length) {
+        current = 0;
+    }
+
+
+    /*
+     * Schedule the next review.
+     */
+
+    setTimeout(displayReview, displayTime);
+}
+
+
+/* Load reviews */
+
+fetch("johnny_vapes_bellevue_4_5_star.json")
+
+    .then(response => response.json())
+
+    .then(data => {
+
+
+        /*
+         * Keep ONLY:
+         *
+         * 4-star reviews
+         * 5-star reviews
+         * Reviews containing written text
+         */
+
+        reviews = data.filter(review => {
+
+            const text = getReviewText(review);
+
+            return (
+                Number(review.rating) >= 4 &&
+                text.length > 0
+            );
+
+        });
+
+
+        /*
+         * Fisher-Yates shuffle.
+         *
+         * Reviews appear in a random order
+         * each time the page loads.
+         */
+
+        for (let i = reviews.length - 1; i > 0; i--) {
+
+            const j =
+                Math.floor(Math.random() * (i + 1));
+
+            [reviews[i], reviews[j]] =
+                [reviews[j], reviews[i]];
+
+        }
+
+
+        /*
+         * Display the actual number of
+         * qualifying written reviews.
+         */
+
+        document.getElementById("count").textContent =
+            reviews.length + " featured reviews";
+
+
+        /*
+         * Start the first review.
+         */
+
+        displayReview();
+
+    })
+
+
+    .catch(error => {
+
+        document.getElementById("text").textContent =
+            "Unable to load reviews.";
+
+        console.error(error);
+
+    });
+
+</script>
+
+</body>
+</html>
